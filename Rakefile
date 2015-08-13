@@ -73,11 +73,13 @@ class Builder
   include EvilFront::Helpers
 
   attr_accessor :slides
-  attr_writer :title, :name
 
   def initialize(build_type = :development)
     @build_type = build_type
   end
+
+  def name(value);  @name = value; end
+  def title(value); @title = value; end
 
   def type(*values)
     @types += ' ' + values.join(' ')
