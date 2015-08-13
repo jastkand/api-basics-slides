@@ -12,13 +12,13 @@ JqueryCdn.local_url = proc { '/jquery.js' }
 
 class Pathname
   def glob(pattern, &block)
-    Pathname.glob(self.join(pattern), &block)
+    Pathname.glob(join(pattern), &block)
   end
 
-  def copy_to(to_dir, pattern = '**/*', &block)
-    self.glob(pattern) do |from|
+  def copy_to(to_dir, pattern = '**/*')
+    glob(pattern) do |from|
       next if from.directory?
-      next if block_given? and yield
+      next if block_given? && yield
       to = to_dir.join(from.relative_path_from(self))
       to.dirname.mkpath
       FileUtils.cp(from, to)
@@ -36,8 +36,8 @@ Slide = Struct.new(:name, :title, :types, :html, :file) do
   end
 end
 
-class HTML < Struct.new(:source)
-  def highlight(elements, with_tag: "mark")
+HTML = Struct.new(:source) do
+  def highlight(elements, with_tag: 'mark')
     [*elements].each_with_object(escape) do |text, result|
       escaped_text = escape_html(text)
       result.gsub!(escaped_text, "<#{with_tag}>#{escaped_text}</#{with_tag}>")
@@ -59,13 +59,13 @@ class HTML < Struct.new(:source)
   private
 
   def escape_html(text)
-    text.to_s.gsub("&", "&").
-      gsub("&", "&amp;").
-      gsub("<", "&lt;").
-      gsub(">", "&gt;").
-      gsub("'", "&#x27;").
-      gsub('"', "&quot;").
-      gsub("/", "&#x2F;")
+    text.to_s.gsub('&', '&')
+    .gsub('&', '&amp;')
+    .gsub('<', '&lt;')
+    .gsub('>', '&gt;')
+    .gsub("'", '&#x27;')
+    .gsub('"', '&quot;')
+    .gsub('/', '&#x2F;')
   end
 end
 
@@ -73,13 +73,11 @@ class Builder
   include EvilFront::Helpers
 
   attr_accessor :slides
+  attr_writer :title, :name
 
   def initialize(build_type = :development)
     @build_type = build_type
   end
-
-  def name(value);  @name = value; end
-  def title(value); @title = value; end
 
   def type(*values)
     @types += ' ' + values.join(' ')
@@ -116,8 +114,8 @@ class Builder
     @slides << Slide.new(@name, @title, @types, html, file)
   end
 
-  def slides_styles(&block)
-    slides.map(&:style).reject {|i| assets[i].nil? }.each do |style|
+  def slides_styles
+    slides.map(&:style).reject { |i| assets[i].nil? }.each do |style|
       yield style
     end
   end
@@ -139,12 +137,12 @@ class Builder
       uri = './slides' + uri if production?
     end
     attrs = attrs.map { |k, v| "#{k}=\"#{v}\"" }.join(' ')
-    "<img src=\"#{ uri }\" #{ attrs } />"
+    "<img src=\"#{uri}\" #{attrs} />"
   end
 
   def link_to(text, url, attrs = {})
     attrs = attrs.map { |k, v| "#{k}=\"#{v}\"" }.join(' ')
-    "<a href=\"#{ url }\" #{ attrs }>#{text}</a>"
+    "<a href=\"#{url}\" #{attrs}>#{text}</a>"
   end
 
   def escape(text)
@@ -152,7 +150,7 @@ class Builder
   end
 
   def encode_image(file, type)
-    "data:#{type};base64," + Base64.encode64(file.open { |io| io.read })
+    "data:#{type};base64," + Base64.encode64(file.open(&:read))
   end
 
   def file_type(file)
@@ -161,7 +159,7 @@ class Builder
 
   def cover(name)
     @types += ' cover h'
-    @cover  = name
+    @cover = name
   end
 
   def standalone?
@@ -242,8 +240,8 @@ task :server do
       css: 'text/css',  js:  'text/javascript',
       png: 'image/png', jpg: 'image/jpeg'
     }.each_pair do |ext, mime|
-      get "/*.#{ ext }" do |path|
-        path = path + ".#{ ext }"
+      get "/*.#{ext}" do |path|
+        path += ".#{ext}"
         content_type mime
         builder.assets[path].to_s
       end
@@ -258,7 +256,7 @@ task :server do
 end
 
 desc 'Prepare commit to GitHub Pages'
-task :deploy => :build do
+task deploy: :build do
   sh ['git checkout -B gh-pages',
       'git rm -r slides/',
       'git rm -r vendor/',
@@ -270,45 +268,49 @@ end
 
 desc 'Add new slide'
 task :add do
-  print "Slide name: "
+  print 'Slide name: '
   name = STDIN.gets.strip
 
   last = SLIDES.children.length + 1
-  print "Position [#{ last }]: "
+  print "Position [#{last}]: "
   pos = STDIN.gets.strip.to_i
   pos = last if pos <= 0 || pos > last
 
   if pos < last
-    SLIDES.children.sort[pos-1..-1].each do |from|
+    SLIDES.children.sort[pos - 1..-1].each do |from|
       num, code = from.basename.to_s.split('_', 2)
       num = (num.to_i + 1).to_s
-      num = '0'  + num if num.length == 1
-      to  = from.dirname.join("#{ num }_#{ code }")
+      num = "0#{num}" if num.length == 1
+      to  = from.dirname.join("#{num}_#{code}")
       from.rename(to)
     end
   end
 
-  num  = pos.to_s
-  num = '0'  + num if num.length == 1
-  slim = SLIDES.join("#{ num }_#{ name }/#{ name }.slim")
+  num = pos.to_s
+  num = "0#{num}" if num.length == 1
 
+  slim = SLIDES.join("#{num}_#{name}/#{name}.slim")
   slim.dirname.mkpath
-  slim.open("w") { |io| io << "- title ''\n" }
+  slim.open('w') { |io| io << "- title ''\n" }
+
+  scss = SLIDES.join("#{num}_#{name}/#{name}.scss")
+  scss.dirname.mkpath
+  scss.open('w') { |io| io << ".#{name}-slide {\n\n}" }
 end
 
 desc 'Delete slide'
 task :del do
-  print "Slide position: "
+  print 'Slide position: '
   pos = STDIN.gets.strip.to_i
 
   dir = SLIDES.children.sort[pos - 1]
   dir.rmtree
 
-  SLIDES.children.sort[pos-1..-1].each do |from|
+  SLIDES.children.sort[pos - 1..-1].each do |from|
     num, code = from.basename.to_s.split('_', 2)
     num = (num.to_i - 1).to_s
-    num = '0'  + num if num.length == 1
-    to = from.dirname.join("#{ num }_#{ code }")
+    num = "0#{num}" if num.length == 1
+    to = from.dirname.join("#{num}_#{code}")
     from.rename(to)
   end
 end
