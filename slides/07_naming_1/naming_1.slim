@@ -1,0 +1,17 @@
+- title 'Как называть методы API?'
+
+h1 Простые случаи
+
+table
+  tr
+    td Коллекция
+    td: pre: code = "/events"
+  tr
+    td Элемент
+    td: pre: code = "/events/:id"
+  tr
+    td Вложенные ресурсы
+    td: pre: code = "/events/:id/sections"
+  tr.next
+    td Глубже
+    td: pre: code = "/events/:id/sections/:id/reports"
