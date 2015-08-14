@@ -2,6 +2,8 @@
 
 h1 Serializers
 
-p По сути presenter
-
-pre: code API::V3::UserSerializer.new(user).as_json
+pre.smaller
+  code = escape("API::V3::UserSerializer.new(user).as_json # => {")
+  code = escape("  first_name: 'John',")
+  code = escape("  first_name: 'Doe',")
+  code = escape("}")
