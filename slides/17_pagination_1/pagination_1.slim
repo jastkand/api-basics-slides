@@ -1,0 +1,6 @@
+- title 'Как делать пагинацию?'
+
+p Простая пагинация
+
+pre: code = escape("/posts?page=3&per_page=25").highlight(%w(page 3 per_page 25))
+pre: code = escape("/posts?offset=50&limit=25").highlight(%w(offset 50 limit 25))
