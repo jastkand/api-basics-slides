@@ -2,4 +2,8 @@
 
 h1 Service Objects
 
-pre: code API::V3::CreateProfile.call(event: current_event, params: params)
+pre
+  code = escape("API::V3::CreateProfile.call(")
+  code = escape("  event: current_event,")
+  code = escape("  params: params")
+  code = escape(")")
