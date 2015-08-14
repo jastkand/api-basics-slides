@@ -1,5 +1,5 @@
-## Diving into AngularJS
+## Confa. Как жить, когда все меняется. Чему научились за 3 версии API
 
-[Preview](http://jastkand.github.io/diving-into-angularjs/)
+[Preview](http://jastkand.github.io/api-basics-slides/)
 
-Presentation from a one of the workshops at [Live Typing](http://ltst.ru)
+[Live Typing](http://ltst.ru)
